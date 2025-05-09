@@ -6,14 +6,14 @@ from PIL import Image
 import numpy as np
 
 # --- Load face detector ---
-FACE_CASCADE_PATH = 'Haarcascades/haarcascade_frontalface_default.xml'
-face_classifier = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+cascade_path = os.path.join(os.path.dirname(__file__), 'haarcascade_frontalface_default.xml')
+face_classifier = cv2.CascadeClassifier(cascade_path)
 if face_classifier.empty():
     st.error("❌ Error: Could not load Haar Cascade.")
     st.stop()
 
 # --- Load known faces from database directory ---
-def load_known_faces(directory='database/'):
+def load_known_faces(directory=os.path.join(os.path.dirname(__file__), 'database')):
     faces_dict = {}
     st.info("🔍 Loading reference faces...")
 
@@ -93,25 +93,25 @@ def run_live_face_recognition(faces_dict):
 def capture_image_from_webcam(faces_dict):
     st.info("📷 Opening webcam. Press the button to capture image.")
     cap = cv2.VideoCapture(0)
-    
+
     if not cap.isOpened():
         st.error("❌ Error: Cannot access webcam.")
         return
 
     stframe = st.empty()
     capture_button = st.button("Capture Image")
-    
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
         stframe.image(frame, channels="BGR")
-        
+
         if capture_button:
             break
 
     cap.release()
-    
+
     if capture_button:
         st.info("🧠 Processing captured image...")
         result_img, count = recognize_faces_in_frame(frame, faces_dict)
@@ -121,12 +121,12 @@ def capture_image_from_webcam(faces_dict):
 # --- Select image from file ---
 def select_image_from_pc(faces_dict):
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-    
+
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
         image = np.array(image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        
+
         st.info("🧠 Processing selected image...")
         result_img, count = recognize_faces_in_frame(image, faces_dict)
         st.image(result_img, channels="BGR")
@@ -135,7 +135,7 @@ def select_image_from_pc(faces_dict):
 # --- Main Streamlit App ---
 def main():
     st.title("Face Recognition System")
-    
+
     # Load faces at startup
     faces_dict = load_known_faces()
     if not faces_dict:
